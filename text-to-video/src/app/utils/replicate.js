@@ -1,18 +1,41 @@
+import Replicate from "replicate";
+
+console.log(
+  "Loaded Replicate API Token:",
+  process.env.REPLICATE_API_TOKEN ? "[present]" : "[missing]"
+);
+const replicate = new Replicate({
+  auth: process.env.REPLICATE_API_TOKEN,
+});
+
 export async function generateVideo(prompt) {
-  // Replace the version string below with the actual model version ID from Replicate
-  const response = await fetch("https://api.replicate.com/v1/predictions", {
-    method: "POST",
-    headers: {
-      Authorization: `Token ${process.env.REPLICATE_API_TOKEN}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      version: "2e90545a27b3343aeb56f93ae7429c2fdc52f245f178efc4f885a845f2d4a368",
+  try {
+    const output = await replicate.run("google/veo-3-fast", {
+      input: {
+        prompt,
+        fps: 8,
+        width: 576,
+        height: 1024,
+        duration: 4,
+      },
+    });
 
-      input: { prompt },
-    }),
-  });
-
-  if (!response.ok) throw new Error("Failed to call Replicate API");
-  return await response.json(); // handle polling later
+    if (Array.isArray(output) && output.length > 0) {
+      return output[0];
+    } else {
+      throw new Error("No output received from Replicate.");
+    }
+  } catch (error) {
+    console.error("Error type:", typeof error);
+    console.error("Error message:", error.message);
+    if (error.response) {
+      console.error("Status:", error.response.status);
+      console.error("Data:", JSON.stringify(error.response.data, null, 2));
+    } else if (error.request) {
+      console.error("Replicate API No Response Received:", error.request);
+    } else {
+      console.error("Full error:", error);
+    }
+    throw new Error("Failed to call Replicate API");
+  }
 }
