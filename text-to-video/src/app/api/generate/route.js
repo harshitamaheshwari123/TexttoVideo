@@ -1,23 +1,15 @@
 import { NextResponse } from "next/server";
-import { generateVideo } from "@/app/utils/replicate";
+import { generateVideoFromHuggingFace } from "@/app/utils/huggingface";
 
 export async function POST(req) {
   try {
     const { prompt } = await req.json();
-
-    if (!prompt || prompt.trim() === "") {
-      return NextResponse.json(
-        { error: "Prompt is required." },
-        { status: 400 }
-      );
-    }
-
-    const videoUrl = await generateVideo(prompt);
-    return NextResponse.json({ videoUrl });
+    const videoUrl = await generateVideoFromHuggingFace(prompt); // ✅ rename to `videoUrl`
+    return NextResponse.json({ videoUrl }); // ✅ send as `videoUrl`
   } catch (error) {
-    console.error("Error in API:", error);
+    console.error("Error generating video:", error);
     return NextResponse.json(
-      { error: "Replicate API error", details: error.message },
+      { error: "Failed to generate video" },
       { status: 500 }
     );
   }
